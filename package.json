@@ -1,6 +1,6 @@
 {
   "name": "hubot-backlog-activity",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A Hubot script that relay the backlog activities to your chat room",
   "main": "index.js",
   "scripts": {
