@@ -25,6 +25,7 @@ module.exports = (robot) ->
   INTERVAL = process.env.HUBOT_BACKLOG_ACTIVITY_INTERVAL ? 30000
   USE_SLACK = process.env.HUBOT_BACKLOG_ACTIVITY_USE_SLACK?
 
+  resolutions = []
   minId = null
 
   rpad = (s, l) ->
@@ -38,6 +39,10 @@ module.exports = (robot) ->
       when value is '2' then '処理中'
       when value is '3' then '処理済み'
       when value is '4' then '完了'
+
+  getResolution = (value) ->
+    resolution = resolutions.filter((r) -> r.id is parseInt(value, 10))[0]
+    resolution?.name ? value
 
   formatActivity = (activity) ->
     a = activity
@@ -58,7 +63,10 @@ module.exports = (robot) ->
           when change.field is 'startDate' then change.field = '開始日'
           when change.field is 'limitDate' then change.field = '期限日'
           when change.field is 'milestone' then change.field = 'マイルストーン'
-          when change.field is 'resolution' then change.field = '完了理由'
+          when change.field is 'resolution'
+            change.field = '完了理由'
+            change.old_value = getResolution change.old_value
+            change.new_value = getResolution change.new_value
           when change.field is 'estimatedHours' then change.field = '予定時間'
           when change.field is 'actualHours' then change.field = '実績時間'
         maxWidth = change.field.length if maxWidth < change.field.length
@@ -111,6 +119,16 @@ module.exports = (robot) ->
       minId = activities[0].id if activities.length > 0
       callback null, (if isFirst then [] else activities)
 
+  fetchResolutions = (callback) ->
+    options =
+      url: "https://#{SPACE_ID}.backlog.jp/api/v2/resolutions"
+      method: 'GET'
+      qs:
+        apiKey: API_KEY
+    request options, (err, res) ->
+      return callback(err) if err?
+      callback null, JSON.parse(res.body)
+
   fetchAndSendActivity = ->
     fetchActivity (err, activities) ->
       if err?
@@ -120,4 +138,6 @@ module.exports = (robot) ->
           sendActivity robot, activity
       setTimeout fetchAndSendActivity, INTERVAL
 
+  fetchResolutions (err, r) ->
+    resolutions = r
   fetchAndSendActivity()
