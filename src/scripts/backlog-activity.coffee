@@ -25,6 +25,7 @@ module.exports = (robot) ->
   INTERVAL = process.env.HUBOT_BACKLOG_ACTIVITY_INTERVAL ? 30000
   USE_SLACK = process.env.HUBOT_BACKLOG_ACTIVITY_USE_SLACK?
 
+  statuses = []
   resolutions = []
   minId = null
 
@@ -34,11 +35,8 @@ module.exports = (robot) ->
     s
 
   getStatus = (value) ->
-    switch
-      when value is '1' then '未対応'
-      when value is '2' then '処理中'
-      when value is '3' then '処理済み'
-      when value is '4' then '完了'
+    status = statuses.filter((i) -> i.id is parseInt(value, 10))[0]
+    status?.name ? value
 
   getResolution = (value) ->
     resolution = resolutions.filter((r) -> r.id is parseInt(value, 10))[0]
@@ -105,6 +103,26 @@ module.exports = (robot) ->
     wrapped = if USE_SLACK then '```\n' + message + '\n```' else message
     robot.messageRoom room, mention + wrapped
 
+  fetchStatuses = (callback) ->
+    options =
+      url: "https://#{SPACE_ID}.backlog.jp/api/v2/statuses"
+      method: 'GET'
+      qs:
+        apiKey: API_KEY
+    request options, (err, res) ->
+      return callback(err) if err?
+      callback null, JSON.parse(res.body)
+
+  fetchResolutions = (callback) ->
+    options =
+      url: "https://#{SPACE_ID}.backlog.jp/api/v2/resolutions"
+      method: 'GET'
+      qs:
+        apiKey: API_KEY
+    request options, (err, res) ->
+      return callback(err) if err?
+      callback null, JSON.parse(res.body)
+
   fetchActivity = (callback) ->
     options =
       url: "https://#{SPACE_ID}.backlog.jp/api/v2/space/activities"
@@ -119,16 +137,6 @@ module.exports = (robot) ->
       minId = activities[0].id if activities.length > 0
       callback null, (if isFirst then [] else activities)
 
-  fetchResolutions = (callback) ->
-    options =
-      url: "https://#{SPACE_ID}.backlog.jp/api/v2/resolutions"
-      method: 'GET'
-      qs:
-        apiKey: API_KEY
-    request options, (err, res) ->
-      return callback(err) if err?
-      callback null, JSON.parse(res.body)
-
   fetchAndSendActivity = ->
     fetchActivity (err, activities) ->
       if err?
@@ -138,6 +146,6 @@ module.exports = (robot) ->
           sendActivity robot, activity
       setTimeout fetchAndSendActivity, INTERVAL
 
-  fetchResolutions (err, r) ->
-    resolutions = r
+  fetchStatuses (err, r) -> statuses = r
+  fetchResolutions (err, r) -> resolutions = r
   fetchAndSendActivity()
