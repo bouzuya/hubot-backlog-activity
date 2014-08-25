@@ -31,7 +31,7 @@ module.exports = (robot) ->
 
   rpad = (s, l) ->
     while s.length < l
-      s += ' '
+      s += '  ' # full width for japanese
     s
 
   getStatus = (value) ->
@@ -67,7 +67,7 @@ module.exports = (robot) ->
             change.new_value = getResolution change.new_value
           when change.field is 'estimatedHours' then change.field = '予定時間'
           when change.field is 'actualHours' then change.field = '実績時間'
-        maxWidth = change.field.length if maxWidth < change.field.length
+        maxWidth = change.field.length if change.field.length > maxWidth
         change
       .map (change) ->
         field = rpad(change.field, maxWidth)
