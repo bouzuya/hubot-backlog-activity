@@ -8,6 +8,7 @@
 #   HUBOT_BACKLOG_ACTIVITY_SPACE_ID
 #   HUBOT_BACKLOG_ACTIVITY_API_KEY
 #   HUBOT_BACKLOG_ACTIVITY_MAPPINGS
+#   HUBOT_BACKLOG_ACTIVITY_USER_MAPPINGS
 #   HUBOT_BACKLOG_ACTIVITY_INTERVAL
 #   HUBOT_BACKLOG_ACTIVITY_USE_SLACK
 #
@@ -20,6 +21,7 @@ module.exports = (robot) ->
   SPACE_ID = process.env.HUBOT_BACKLOG_ACTIVITY_SPACE_ID
   API_KEY = process.env.HUBOT_BACKLOG_ACTIVITY_API_KEY
   MAPPINGS = process.env.HUBOT_BACKLOG_ACTIVITY_MAPPINGS ? '{}'
+  USER_MAPPINGS = process.env.HUBOT_BACKLOG_ACTIVITY_USER_MAPPINGS ? '{}'
   INTERVAL = process.env.HUBOT_BACKLOG_ACTIVITY_INTERVAL ? 30000
   USE_SLACK = process.env.HUBOT_BACKLOG_ACTIVITY_USE_SLACK?
 
@@ -77,13 +79,23 @@ module.exports = (robot) ->
         #{userName} #{c.description}
       """
 
+  getMention = (activity) ->
+    c = activity.content
+    assigner = c.changes.filter((change) -> change.field is '担当者')[0]
+    return '' unless assigner?
+    mentionNames = JSON.parse USER_MAPPINGS
+    mentionName = mentionNames[assigner.new_value]
+    return '' unless mentionName?
+    '@' + mentionName + ' \n'
+
   sendActivity = (robot, activity) ->
     rooms = JSON.parse(MAPPINGS)
     room = rooms[activity.project.projectKey]
     return unless room?
     message = formatActivity activity
+    mention = getMention activity
     wrapped = if USE_SLACK then '```\n' + message + '\n```' else message
-    robot.messageRoom room, wrapped
+    robot.messageRoom room, mention + wrapped
 
   fetchActivity = (callback) ->
     options =
