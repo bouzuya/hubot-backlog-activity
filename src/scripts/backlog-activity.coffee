@@ -92,16 +92,20 @@ module.exports = (robot) ->
     mentionNames = JSON.parse USER_MAPPINGS
     mentionName = mentionNames[assigner.new_value]
     return '' unless mentionName?
-    '@' + mentionName + ' \n'
+    mentionName
 
   sendActivity = (robot, activity) ->
     rooms = JSON.parse(MAPPINGS)
     room = rooms[activity.project.projectKey]
     return unless room?
     message = formatActivity activity
-    mention = getMention activity
     wrapped = if USE_SLACK then '```\n' + message + '\n```' else message
-    robot.messageRoom room, mention + wrapped
+    mention = getMention activity
+    if mention?
+      user = robot.brain.userForName mention
+      robot.send { user, room }, wrapped
+    else
+      robot.messageRoom room, wrapped
 
   fetchStatuses = (callback) ->
     options =
