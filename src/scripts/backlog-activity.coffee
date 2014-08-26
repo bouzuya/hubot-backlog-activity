@@ -104,7 +104,7 @@ module.exports = (robot) ->
     if mention?
       if USE_SLACK
         user = name: mention
-        robot.send { user, room }, wrapped
+        robot.send { user, room }, mention + ': ' + wrapped
       else
         user = robot.brain.userForName mention
         robot.send { user, room }, wrapped
