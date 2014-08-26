@@ -102,8 +102,12 @@ module.exports = (robot) ->
     wrapped = if USE_SLACK then '```\n' + message + '\n```' else message
     mention = getMention activity
     if mention?
-      user = robot.brain.userForName mention
-      robot.send { user, room }, wrapped
+      if USE_SLACK
+        user = name: mention
+        robot.send { user, room }, wrapped
+      else
+        user = robot.brain.userForName mention
+        robot.send { user, room }, wrapped
     else
       robot.messageRoom room, wrapped
 
