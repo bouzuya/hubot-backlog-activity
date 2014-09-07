@@ -12,7 +12,7 @@ describe 'backlog-activity', ->
     @robot = new Robot(path.resolve(__dirname, '..'), 'shell', false, 'hubot')
     @robot.adapter.on 'connected', =>
       @robot.load path.resolve(__dirname, '../../src/scripts')
-      done()
+      setTimeout done, 10 # wait for @robot.parseHelp()
     @robot.run()
 
   afterEach (done) ->
@@ -21,6 +21,6 @@ describe 'backlog-activity', ->
       done()
     @robot.shutdown()
 
-  describe 'dummy', ->
-    it 'works', ->
-      assert 1 is 1
+  describe 'robot.helpCommands()', ->
+    it 'should be []', ->
+      assert.deepEqual @robot.helpCommands(), []
