@@ -87,7 +87,7 @@ module.exports = (robot) ->
 
   getMention = (activity) ->
     c = activity.content
-    assigner = c.changes.filter((change) -> change.field is '担当者')[0]
+    assigner = c.changes?.filter((change) -> change.field is '担当者')[0]
     return '' unless assigner?
     mentionNames = JSON.parse USER_MAPPINGS
     mentionName = mentionNames[assigner.new_value]
@@ -98,6 +98,7 @@ module.exports = (robot) ->
     rooms = JSON.parse(MAPPINGS)
     room = rooms[activity.project.projectKey]
     return unless room?
+    return unless activity.type in [1, 2, 3]
     message = formatActivity activity
     wrapped = if USE_SLACK then '```\n' + message + '\n```' else message
     mention = getMention activity
