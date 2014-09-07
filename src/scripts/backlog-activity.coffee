@@ -101,7 +101,7 @@ module.exports = (robot) ->
     message = formatActivity activity
     wrapped = if USE_SLACK then '```\n' + message + '\n```' else message
     mention = getMention activity
-    if mention?
+    if mention?.length > 0
       if USE_SLACK
         user = name: mention
         robot.send { user, room }, mention + ': ' + wrapped
@@ -111,9 +111,9 @@ module.exports = (robot) ->
     else
       robot.messageRoom room, wrapped
 
-  fetchStatuses = (callback) ->
+  get = (path, callback) ->
     options =
-      url: "https://#{SPACE_ID}.backlog.jp/api/v2/statuses"
+      url: "https://#{SPACE_ID}.backlog.jp#{path}"
       method: 'GET'
       qs:
         apiKey: API_KEY
@@ -121,15 +121,11 @@ module.exports = (robot) ->
       return callback(err) if err?
       callback null, JSON.parse(res.body)
 
+  fetchStatuses = (callback) ->
+    get '/api/v2/statuses', callback
+
   fetchResolutions = (callback) ->
-    options =
-      url: "https://#{SPACE_ID}.backlog.jp/api/v2/resolutions"
-      method: 'GET'
-      qs:
-        apiKey: API_KEY
-    request options, (err, res) ->
-      return callback(err) if err?
-      callback null, JSON.parse(res.body)
+    get '/api/v2/resolutions', callback
 
   fetchActivity = (callback) ->
     options =
