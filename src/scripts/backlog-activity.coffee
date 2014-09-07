@@ -104,8 +104,9 @@ module.exports = (robot) ->
     mention = getMention activity
     if mention?.length > 0
       if USE_SLACK
+        reply_to = robot.brain.userForName(mention)?.reply_to
         user = name: mention
-        robot.send { user, room }, mention + ': ' + wrapped
+        robot.send { reply_to, user, room }, mention + ': ' + wrapped
       else
         user = robot.brain.userForName mention
         robot.send { user, room }, wrapped
